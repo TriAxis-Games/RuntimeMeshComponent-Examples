@@ -1,0 +1,17 @@
+{
+  "FileVersion": 3,
+  "EngineAssociation": "4.20",
+  "Category": "",
+  "CreatedBy": "Chris Conway (Koderz)",
+  "Description": "An example project for demonstrating and testing the RuntimeMeshComponent",
+  "Modules": [
+    {
+      "Name": "RuntimeMeshSandbox",
+      "Type": "Runtime",
+      "LoadingPhase": "Default",
+      "AdditionalDependencies": [
+        "RuntimeMeshComponent"
+      ]
+    }
+  ]
+}
