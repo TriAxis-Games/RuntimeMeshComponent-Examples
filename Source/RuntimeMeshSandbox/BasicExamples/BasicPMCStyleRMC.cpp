@@ -19,6 +19,8 @@ void ABasicPMCStyleRMC::OnConstruction(const FTransform& Transform)
 		// The static provider should initialize before we use it
 		GetRuntimeMeshComponent()->Initialize(StaticProvider);
 
+		StaticProvider->SetupMaterialSlot(0, TEXT("TriMat"), Material);
+
 
 		// This creates 3 positions for a triangle
 		TArray<FVector> Positions{ FVector(0, -50, 0), FVector(0, 0, 100), FVector(0, 50, 0) };
