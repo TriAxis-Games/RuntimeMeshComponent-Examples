@@ -11,7 +11,7 @@ FFunctionDisplayProviderProxy::FFunctionDisplayProviderProxy(TWeakObjectPtr<URun
 	:FRuntimeMeshProviderProxy(InParent)
 {
 	minx = -PI*2; maxx = PI*2; miny = minx; maxy = maxx; minvalue = -1; maxvalue = 1;
-	pointsx = 128; pointsy = pointsx;
+	pointsx = 100; pointsy = pointsx;
 	sizex = 1000; sizey = 1000; sizez = 200;
 }
 
@@ -22,7 +22,7 @@ FFunctionDisplayProviderProxy::~FFunctionDisplayProviderProxy()
 void FFunctionDisplayProviderProxy::UpdateProxyParameters(URuntimeMeshProvider * ParentProvider, bool bIsInitialSetup)
 {
 	UFunctionDisplayProvider* CastParent = (UFunctionDisplayProvider*)ParentProvider;
-	UE_LOG(LogTemp, Log, TEXT("[FFunctionDisplayProviderProxy::UpdateProxyParameters] Updating params"));
+	//UE_LOG(LogTemp, Log, TEXT("[FFunctionDisplayProviderProxy::UpdateProxyParameters] Updating params"));
 	if (CastParent)
 	{
 		Material = CastParent->Material;
@@ -56,7 +56,7 @@ void FFunctionDisplayProviderProxy::Initialize()
 bool FFunctionDisplayProviderProxy::GetSectionMeshForLOD(int32 LODIndex, int32 SectionId, FRuntimeMeshRenderableMeshData & MeshData)
 {
 	check(LODIndex == 0 && SectionId == 0);
-	UE_LOG(LogTemp, Log, TEXT("[FFunctionDisplayProviderProxy::GetSectionMeshForLOD] Grabbing mesh"));
+	//UE_LOG(LogTemp, Log, TEXT("[FFunctionDisplayProviderProxy::GetSectionMeshForLOD] Grabbing mesh"));
 	float dx = (maxx - minx) / (float)pointsx; //change of x between two points
 	float dy = (maxy - miny) / (float)pointsy; //change of y between two points
 	for (int32 yindex = 0; yindex < pointsy; yindex++)
@@ -121,7 +121,7 @@ UFunctionDisplayProvider::UFunctionDisplayProvider()
 
 void UFunctionDisplayProvider::SetTime(float Intime)
 {
-	UE_LOG(LogTemp, Log, TEXT("[UFunctionDisplayProvider::SetTime] Called"));
+	//UE_LOG(LogTemp, Log, TEXT("[UFunctionDisplayProvider::SetTime] Called"));
 	time = Intime;
 	MarkProxyParametersDirty();
 }
