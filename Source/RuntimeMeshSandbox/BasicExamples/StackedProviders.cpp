@@ -32,6 +32,12 @@ void AStackedProviders::OnConstruction(const FTransform & Transform)
 	if (PlaneProvider && CollisionProvider)
 	{
 		CollisionProvider->SourceProvider = PlaneProvider;
+		CollisionProvider->SetRenderableLODForCollision(2);
+		CollisionProvider->SetRenderableSectionAffectsCollision(0, true);
+		FRuntimeMeshCollisionSettings CollisionSettings;
+		CollisionSettings.bUseComplexAsSimple = true;
+		CollisionSettings.bUseAsyncCooking = true;
+		CollisionProvider->SetCollisionSettings(CollisionSettings);
 		RuntimeMeshComponent->Initialize(CollisionProvider);
 	}
 }
