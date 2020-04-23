@@ -6,52 +6,50 @@
 #include "RuntimeMeshProvider.h"
 #include "FunctionDisplayProvider.generated.h"
 
-/**
- * 
- */
-class RUNTIMEMESHSANDBOX_API FFunctionDisplayProviderProxy : public FRuntimeMeshProviderProxy
-{
-public:
-	TWeakObjectPtr<UMaterialInterface> Material;
-	float function(float x, float y);
-	float minvalue, maxvalue;
-	float minx, maxx, miny, maxy;
-	int32 pointsx, pointsy;
-	float sizex, sizey, sizez;
-
-	float time;
-
-	FFunctionDisplayProviderProxy(TWeakObjectPtr<URuntimeMeshProvider> InParent);
-	~FFunctionDisplayProviderProxy();
-
-	void UpdateProxyParameters(URuntimeMeshProvider* ParentProvider, bool bIsInitialSetup) override;
-
-	virtual void Initialize() override;
-
-	virtual bool GetSectionMeshForLOD(int32 LODIndex, int32 SectionId, FRuntimeMeshRenderableMeshData& MeshData) override;
-
-	virtual FBoxSphereBounds GetBounds() override;
-
-	bool IsThreadSafe() const override { return true; }
-};
 
 UCLASS(HideCategories = Object, BlueprintType)
 class RUNTIMEMESHSANDBOX_API UFunctionDisplayProvider : public URuntimeMeshProvider
 {
 	GENERATED_BODY()
+private:
+	mutable FCriticalSection PropertySyncRoot;
+	FBoxSphereBounds LocalBounds;
 
+	UPROPERTY(VisibleAnywhere, BlueprintGetter = GetDisplayMaterial, BlueprintSetter = SetDisplayMaterial)
+	UMaterialInterface* DisplayMaterial;
+
+	UPROPERTY(VisibleAnywhere, BlueprintGetter = GetTime, BlueprintSetter = SetTime)
+	float Time;
+
+
+
+	float MinValue, MaxValue;
+	float MinX, MaxX, MinY, MaxY;
+	int32 PointsSX, PointsSY;
+	float SizeX, SizeY, SizeZ;
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UMaterialInterface* Material;
-
-	float time;
-
 	UFunctionDisplayProvider();
 
+
 	UFUNCTION(BlueprintCallable)
-		void SetTime(float time);
+	UMaterialInterface* GetDisplayMaterial() const;
+	UFUNCTION(BlueprintCallable)
+	void SetDisplayMaterial(UMaterialInterface* InMaterial);
+
+	UFUNCTION(BlueprintCallable)
+	float GetTime() const;
+	UFUNCTION(BlueprintCallable)
+	void SetTime(float InTime);
 
 protected:
-	virtual FRuntimeMeshProviderProxyRef GetProxy() override;
-	
+
+	void Initialize_Implementation() override;
+	FBoxSphereBounds GetBounds_Implementation() override;
+	bool GetSectionMeshForLOD_Implementation(int32 LODIndex, int32 SectionId, FRuntimeMeshRenderableMeshData& MeshData) override;
+	bool IsThreadSafe_Implementation() override;
+
+private:
+	void CalculateBounds();
+
+	float CalculateHeightForPoint(float x, float y);
 };

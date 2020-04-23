@@ -18,8 +18,8 @@ void ABasicProviderInitialization::OnConstruction(const FTransform& Transform)
 	URuntimeMeshProviderBox* BoxProvider = NewObject<URuntimeMeshProviderBox>(this, TEXT("RuntimeMeshProvider-Box"));
 	if (BoxProvider)
 	{
-		BoxProvider->BoxRadius = FVector(100, 100, 100);
-		BoxProvider->Material = Material;
+		BoxProvider->SetBoxRadius(FVector(100, 100, 100));
+		BoxProvider->SetBoxMaterial(Material);
 
 		GetRuntimeMeshComponent()->Initialize(BoxProvider);
 	}

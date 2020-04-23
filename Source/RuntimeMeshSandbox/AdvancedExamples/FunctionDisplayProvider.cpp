@@ -2,42 +2,46 @@
 
 #include "FunctionDisplayProvider.h"
 
-float FFunctionDisplayProviderProxy::function(float x, float y)
+
+UFunctionDisplayProvider::UFunctionDisplayProvider()
 {
-	return FMath::Sin(sqrt(x*x+y*y) +time);
+	MinX = -PI * 2; MaxX = PI * 2; MinY = MinX; MaxY = MaxX; MinValue = -1; MaxValue = 1;
+	PointsSX = 128; PointsSY = PointsSX;
+	SizeX = 1000; SizeY = 1000; SizeZ = 200;
+
+	CalculateBounds();
 }
 
-FFunctionDisplayProviderProxy::FFunctionDisplayProviderProxy(TWeakObjectPtr<URuntimeMeshProvider> InParent)
-	:FRuntimeMeshProviderProxy(InParent)
+UMaterialInterface* UFunctionDisplayProvider::GetDisplayMaterial() const
 {
-	minx = -PI*2; maxx = PI*2; miny = minx; maxy = maxx; minvalue = -1; maxvalue = 1;
-	pointsx = 128; pointsy = pointsx;
-	sizex = 1000; sizey = 1000; sizez = 200;
+	FScopeLock Lock(&PropertySyncRoot);
+	return DisplayMaterial;
 }
 
-FFunctionDisplayProviderProxy::~FFunctionDisplayProviderProxy()
+void UFunctionDisplayProvider::SetDisplayMaterial(UMaterialInterface* InMaterial)
 {
+	FScopeLock Lock(&PropertySyncRoot);
+	DisplayMaterial = InMaterial;
 }
 
-void FFunctionDisplayProviderProxy::UpdateProxyParameters(URuntimeMeshProvider * ParentProvider, bool bIsInitialSetup)
+float UFunctionDisplayProvider::GetTime() const
 {
-	UFunctionDisplayProvider* CastParent = (UFunctionDisplayProvider*)ParentProvider;
-	UE_LOG(LogTemp, Log, TEXT("[FFunctionDisplayProviderProxy::UpdateProxyParameters] Updating params"));
-	if (CastParent)
+	FScopeLock Lock(&PropertySyncRoot);
+	return Time;
+}
+
+void UFunctionDisplayProvider::SetTime(float InTime)
+{
 	{
-		Material = CastParent->Material;
-		time = CastParent->time;
-		if (!bIsInitialSetup)
-		{
-			MarkSectionDirty(0, 0);
-			MarkCollisionDirty(); //just in case
-		}
+		FScopeLock Lock(&PropertySyncRoot);
+		Time = InTime;
 	}
+	MarkLODDirty(0);
 }
 
-void FFunctionDisplayProviderProxy::Initialize()
+void UFunctionDisplayProvider::Initialize_Implementation()
 {
-	SetupMaterialSlot(0, FName("Material"), Material.Get());
+	SetupMaterialSlot(0, FName("Material"), DisplayMaterial);
 	TArray<FRuntimeMeshLODProperties> LODs;
 	FRuntimeMeshLODProperties LODProperties;
 	LODProperties.ScreenSize = 0.0f;
@@ -53,34 +57,39 @@ void FFunctionDisplayProviderProxy::Initialize()
 	CreateSection(0, 0, Properties);
 }
 
-bool FFunctionDisplayProviderProxy::GetSectionMeshForLOD(int32 LODIndex, int32 SectionId, FRuntimeMeshRenderableMeshData & MeshData)
+FBoxSphereBounds UFunctionDisplayProvider::GetBounds_Implementation()
 {
+	return LocalBounds;
+}
+
+bool UFunctionDisplayProvider::GetSectionMeshForLOD_Implementation(int32 LODIndex, int32 SectionId, FRuntimeMeshRenderableMeshData& MeshData)
+{
+
 	check(LODIndex == 0 && SectionId == 0);
-	UE_LOG(LogTemp, Log, TEXT("[FFunctionDisplayProviderProxy::GetSectionMeshForLOD] Grabbing mesh"));
-	float dx = (maxx - minx) / (float)pointsx; //change of x between two points
-	float dy = (maxy - miny) / (float)pointsy; //change of y between two points
-	for (int32 yindex = 0; yindex < pointsy; yindex++)
+	float dx = (MaxX - MinX) / (float)PointsSX; //change of x between two points
+	float dy = (MaxY - MinY) / (float)PointsSY; //change of y between two points
+	for (int32 yindex = 0; yindex < PointsSY; yindex++)
 	{
-		float yalpha = (float)yindex / (float)(pointsy - 1);
-		float ypos = FMath::Lerp(-sizey / 2, sizey / 2, yalpha);
-		float yvalue = FMath::Lerp(miny, maxy, yalpha);
-		for (int32 xindex = 0; xindex < pointsx; xindex++)
+		float yalpha = (float)yindex / (float)(PointsSY - 1);
+		float ypos = FMath::Lerp(-SizeY / 2, SizeY / 2, yalpha);
+		float yvalue = FMath::Lerp(MinY, MaxY, yalpha);
+		for (int32 xindex = 0; xindex < PointsSX; xindex++)
 		{
-			float xalpha = (float)xindex / (float)(pointsx - 1);
-			float xpos = FMath::Lerp(-sizex / 2, sizex / 2, xalpha);
-			float xvalue = FMath::Lerp(minx, maxx, xalpha);
+			float xalpha = (float)xindex / (float)(PointsSX - 1);
+			float xpos = FMath::Lerp(-SizeX / 2, SizeX / 2, xalpha);
+			float xvalue = FMath::Lerp(MinX, MaxX, xalpha);
 
-			FVector Position(xpos, ypos, 
+			FVector Position(xpos, ypos,
 				FMath::GetMappedRangeValueClamped(
-					FVector2D(minvalue, maxvalue), 
-					FVector2D(-sizez / 2, sizez / 2), 
-					function(xvalue, yvalue)
-				)
-			);
+					FVector2D(MinValue, MaxValue),
+					FVector2D(-SizeZ / 2, SizeZ / 2),
+					CalculateHeightForPoint(xvalue, yvalue)
+					)
+				);
 
-			float dfdx = (function(xvalue + dx, yvalue) - function(xvalue - dx, yvalue)) / (2 * dx); //derivative of f over x
-			float dfdy = (function(xvalue, yvalue + dy) - function(xvalue, yvalue - dy)) / (2 * dy); //derivative of f over y
-			
+			float dfdx = (CalculateHeightForPoint(xvalue + dx, yvalue) - CalculateHeightForPoint(xvalue - dx, yvalue)) / (2 * dx); //derivative of f over x
+			float dfdy = (CalculateHeightForPoint(xvalue, yvalue + dy) - CalculateHeightForPoint(xvalue, yvalue - dy)) / (2 * dy); //derivative of f over y
+
 			FVector Normal(-dfdx, -dfdy, 1);
 			Normal.Normalize();
 			FVector Tangent(1, 0, dfdx);
@@ -93,11 +102,11 @@ bool FFunctionDisplayProviderProxy::GetSectionMeshForLOD(int32 LODIndex, int32 S
 			MeshData.TexCoords.Add(UV);
 			MeshData.Colors.Add(FColor::White);
 
-			if (xindex != pointsx - 1 && yindex != pointsy - 1)
+			if (xindex != PointsSX - 1 && yindex != PointsSY - 1)
 			{
-				int32 AIndex = xindex + yindex * pointsx;
+				int32 AIndex = xindex + yindex * PointsSX;
 				int32 BIndex = AIndex + 1;
-				int32 CIndex = AIndex + pointsx;
+				int32 CIndex = AIndex + PointsSX;
 				int32 DIndex = CIndex + 1;
 				MeshData.Triangles.AddTriangle(AIndex, CIndex, BIndex);
 				MeshData.Triangles.AddTriangle(BIndex, CIndex, DIndex);
@@ -107,26 +116,19 @@ bool FFunctionDisplayProviderProxy::GetSectionMeshForLOD(int32 LODIndex, int32 S
 	return true;
 }
 
-FBoxSphereBounds FFunctionDisplayProviderProxy::GetBounds()
+bool UFunctionDisplayProvider::IsThreadSafe_Implementation()
 {
-	FVector ext(sizex, sizey, sizez);
-	FBox box = FBox(-ext / 2, ext / 2);
-	return FBoxSphereBounds(box);
+	return true;
 }
 
-UFunctionDisplayProvider::UFunctionDisplayProvider()
+void UFunctionDisplayProvider::CalculateBounds()
 {
-
+	FVector Ext(SizeX, SizeY, SizeZ);
+	FBox Box = FBox(-Ext / 2, Ext / 2);
+	LocalBounds = FBoxSphereBounds(Box);
 }
 
-void UFunctionDisplayProvider::SetTime(float Intime)
+float UFunctionDisplayProvider::CalculateHeightForPoint(float x, float y)
 {
-	UE_LOG(LogTemp, Log, TEXT("[UFunctionDisplayProvider::SetTime] Called"));
-	time = Intime;
-	MarkProxyParametersDirty();
-}
-
-FRuntimeMeshProviderProxyRef UFunctionDisplayProvider::GetProxy()
-{
-	return MakeShared<FFunctionDisplayProviderProxy, ESPMode::ThreadSafe>(TWeakObjectPtr<URuntimeMeshProvider>(this));
+	return FMath::Sin(sqrt(x * x + y * y) + Time);
 }

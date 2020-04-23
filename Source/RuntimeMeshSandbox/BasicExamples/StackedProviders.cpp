@@ -27,13 +27,13 @@ void AStackedProviders::OnConstruction(const FTransform & Transform)
 {
 	Super::OnConstruction(Transform);
 
-	URuntimeMeshProviderPlane* PlaneProvider = NewObject<URuntimeMeshProviderPlane>(this, TEXT("RuntimeMeshProvider-Plane"));
-	URuntimeMeshProviderCollisionFromRenderable* CollisionProvider = NewObject<URuntimeMeshProviderCollisionFromRenderable>(this, TEXT("RuntimeMeshProvider-Collision"));
-	if (PlaneProvider && CollisionProvider)
-	{
-		CollisionProvider->SourceProvider = PlaneProvider;
-		RuntimeMeshComponent->Initialize(CollisionProvider);
-	}
+// 	URuntimeMeshProviderPlane* PlaneProvider = NewObject<URuntimeMeshProviderPlane>(this, TEXT("RuntimeMeshProvider-Plane"));
+// 	URuntimeMeshProviderCollisionFromRenderable* CollisionProvider = NewObject<URuntimeMeshProviderCollisionFromRenderable>(this, TEXT("RuntimeMeshProvider-Collision"));
+// 	if (PlaneProvider && CollisionProvider)
+// 	{
+// 		CollisionProvider->SourceProvider = PlaneProvider;
+// 		RuntimeMeshComponent->Initialize(CollisionProvider);
+// 	}
 }
 
 // Called every frame (unused, and set to tick to false)
