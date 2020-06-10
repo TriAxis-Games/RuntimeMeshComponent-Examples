@@ -43,10 +43,10 @@ public:
 
 protected:
 
-	void Initialize_Implementation() override;
-	FBoxSphereBounds GetBounds_Implementation() override;
-	bool GetSectionMeshForLOD_Implementation(int32 LODIndex, int32 SectionId, FRuntimeMeshRenderableMeshData& MeshData) override;
-	bool IsThreadSafe_Implementation() override;
+	void Initialize() override;
+	FBoxSphereBounds GetBounds() override;
+	bool GetSectionMeshForLOD(int32 LODIndex, int32 SectionId, FRuntimeMeshRenderableMeshData& MeshData) override;
+	bool IsThreadSafe() override;
 
 private:
 	void CalculateBounds();

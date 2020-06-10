@@ -39,7 +39,7 @@ void UFunctionDisplayProvider::SetTime(float InTime)
 	MarkLODDirty(0);
 }
 
-void UFunctionDisplayProvider::Initialize_Implementation()
+void UFunctionDisplayProvider::Initialize()
 {
 	SetupMaterialSlot(0, FName("Material"), DisplayMaterial);
 	TArray<FRuntimeMeshLODProperties> LODs;
@@ -53,16 +53,16 @@ void UFunctionDisplayProvider::Initialize_Implementation()
 	Properties.bIsVisible = true;
 	Properties.MaterialSlot = 0;
 	Properties.bWants32BitIndices = true;
-	Properties.UpdateFrequency = ERuntimeMeshUpdateFrequency::Average;
+	Properties.UpdateFrequency = ERuntimeMeshUpdateFrequency::Frequent;
 	CreateSection(0, 0, Properties);
 }
 
-FBoxSphereBounds UFunctionDisplayProvider::GetBounds_Implementation()
+FBoxSphereBounds UFunctionDisplayProvider::GetBounds()
 {
 	return LocalBounds;
 }
 
-bool UFunctionDisplayProvider::GetSectionMeshForLOD_Implementation(int32 LODIndex, int32 SectionId, FRuntimeMeshRenderableMeshData& MeshData)
+bool UFunctionDisplayProvider::GetSectionMeshForLOD(int32 LODIndex, int32 SectionId, FRuntimeMeshRenderableMeshData& MeshData)
 {
 
 	check(LODIndex == 0 && SectionId == 0);
@@ -116,7 +116,7 @@ bool UFunctionDisplayProvider::GetSectionMeshForLOD_Implementation(int32 LODInde
 	return true;
 }
 
-bool UFunctionDisplayProvider::IsThreadSafe_Implementation()
+bool UFunctionDisplayProvider::IsThreadSafe()
 {
 	return true;
 }
