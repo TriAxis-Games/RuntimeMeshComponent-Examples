@@ -71,7 +71,7 @@ void USierpinskiProvider::SetMaxIterations(const int32 & InMaxIterations)
 		Properties.bIsVisible = true;
 		Properties.MaterialSlot = 0;
 		Properties.UpdateFrequency = ERuntimeMeshUpdateFrequency::Infrequent;
-		Properties.bWants32BitIndices = (3<<(2*(InMaxIterations - LODIndex))) >= 1 << 16; //4^n = 2^2n = 1<<2n
+		Properties.bWants32BitIndices = (3<<(2*(InMaxIterations - LODIndex +1))) >= 1 << 16; //4^n = 2^2n = 1<<2n
 		CreateSection(LODIndex, 0, Properties);
 	}
 	MaxIterations = InMaxIterations;
