@@ -13,7 +13,9 @@
 #include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
-
+#if ENGINE_MAJOR_VERSION == 5 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 25)
+#define ABOVE_425
+#endif
 //////////////////////////////////////////////////////////////////////////
 // ARuntimeMeshSandboxCharacter
 
@@ -29,7 +31,7 @@ ARuntimeMeshSandboxCharacter::ARuntimeMeshSandboxCharacter()
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
-#if ENGINE_MAJOR_VERSION >= 4 && ENGINE_MINOR_VERSION >= 25
+#ifdef ABOVE_425
 	FirstPersonCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, 64.f)); // Position the camera
 #else
 	FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 64.f); // Position the camera
@@ -42,7 +44,7 @@ ARuntimeMeshSandboxCharacter::ARuntimeMeshSandboxCharacter()
 	Mesh1P->SetupAttachment(FirstPersonCameraComponent);
 	Mesh1P->bCastDynamicShadow = false;
 	Mesh1P->CastShadow = false;
-#if ENGINE_MAJOR_VERSION >= 4 && ENGINE_MINOR_VERSION >= 25
+#ifdef ABOVE_425
 	Mesh1P->SetRelativeRotation(FRotator(1.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
 #else
@@ -307,3 +309,7 @@ bool ARuntimeMeshSandboxCharacter::EnableTouchscreenMovement(class UInputCompone
 	
 	return false;
 }
+
+#ifdef ABOVE_425
+#undef ABOVE_425
+#endif
